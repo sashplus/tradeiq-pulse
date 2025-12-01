@@ -39,6 +39,7 @@ export type SignalRating = 'Strong Buy' | 'Buy' | 'Neutral' | 'Sell' | 'Strong S
 export type SignalStatus = 'Active' | 'Hit Target' | 'Stopped Out' | 'Expired';
 export type HoldingPeriod = 'Scalping' | 'Day trade' | 'Swing' | 'Position';
 export type RiskLevel = 'Low' | 'Medium' | 'High';
+export type StrategyType = 'Cautious' | 'Moderate' | 'Aggressive';
 
 export interface Signal {
   id: string;
@@ -55,6 +56,7 @@ export interface Signal {
   risk_level: RiskLevel;
   status: SignalStatus;
   holding_period: HoldingPeriod;
+  strategy: StrategyType;
   source_news: NewsItem[];
   notes?: string;
 }

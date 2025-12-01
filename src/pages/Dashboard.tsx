@@ -2,6 +2,7 @@ import { Activity, TrendingUp, FileText, CheckCircle2, BarChart3, AlertCircle } 
 import { KPICard } from "@/components/dashboard/KPICard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignalBadge } from "@/components/signals/SignalBadge";
+import { StrategyBadge } from "@/components/signals/StrategyBadge";
 import { SentimentBadge } from "@/components/signals/SentimentBadge";
 import { ScoreBar } from "@/components/signals/ScoreBar";
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +66,7 @@ const Dashboard = () => {
                   <div className="flex items-center gap-3">
                     <div className="font-bold text-lg">{signal.asset.symbol}</div>
                     <SignalBadge rating={signal.rating} />
+                    <StrategyBadge strategy={signal.strategy} />
                   </div>
                   <Badge variant="outline">{signal.holding_period}</Badge>
                 </div>
@@ -153,6 +155,7 @@ const Dashboard = () => {
                   <th className="p-3 text-left font-medium">Time</th>
                   <th className="p-3 text-left font-medium">Asset</th>
                   <th className="p-3 text-left font-medium">Timeframe</th>
+                  <th className="p-3 text-left font-medium">Strategy</th>
                   <th className="p-3 text-left font-medium">Rating</th>
                   <th className="p-3 text-left font-medium">Scores</th>
                   <th className="p-3 text-left font-medium">Entry</th>
@@ -169,6 +172,9 @@ const Dashboard = () => {
                     <td className="p-3 font-medium">{signal.asset.symbol}</td>
                     <td className="p-3">
                       <Badge variant="outline">{signal.timeframe}</Badge>
+                    </td>
+                    <td className="p-3">
+                      <StrategyBadge strategy={signal.strategy} />
                     </td>
                     <td className="p-3">
                       <SignalBadge rating={signal.rating} />
