@@ -80,6 +80,10 @@ const Dashboard = () => {
                     <span className="font-medium ml-1">{signal.technical_score}</span>
                   </div>
                   <div>
+                    <span className="text-muted-foreground">O:</span>
+                    <span className="font-medium ml-1">{signal.onchain_score}</span>
+                  </div>
+                  <div>
                     <span className="text-muted-foreground">Total:</span>
                     <span className="font-medium ml-1">{signal.total_score}</span>
                   </div>
@@ -186,6 +190,9 @@ const Dashboard = () => {
                         <span className="text-muted-foreground mx-1">/</span>
                         <span className="text-muted-foreground">T:</span>
                         <span>{signal.technical_score}</span>
+                        <span className="text-muted-foreground mx-1">/</span>
+                        <span className="text-muted-foreground">O:</span>
+                        <span>{signal.onchain_score}</span>
                         <span className="text-muted-foreground mx-1">=</span>
                         <span className="font-medium">{signal.total_score}</span>
                       </div>
