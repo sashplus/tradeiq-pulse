@@ -93,6 +93,7 @@ export const mockSignals: Signal[] = [
     risk_level: 'Medium',
     status: 'Active',
     holding_period: 'Swing',
+    strategy: 'Aggressive',
     source_news: [mockNews[0]],
     notes: 'Strong bullish momentum with ETF inflows',
   },
@@ -111,6 +112,7 @@ export const mockSignals: Signal[] = [
     risk_level: 'Medium',
     status: 'Active',
     holding_period: 'Position',
+    strategy: 'Moderate',
     source_news: [mockNews[3]],
   },
   {
@@ -128,6 +130,7 @@ export const mockSignals: Signal[] = [
     risk_level: 'Low',
     status: 'Hit Target',
     holding_period: 'Day trade',
+    strategy: 'Cautious',
     source_news: [mockNews[4]],
   },
   {
@@ -145,6 +148,7 @@ export const mockSignals: Signal[] = [
     risk_level: 'Medium',
     status: 'Active',
     holding_period: 'Swing',
+    strategy: 'Cautious',
     source_news: [mockNews[2]],
   },
   {
@@ -162,6 +166,7 @@ export const mockSignals: Signal[] = [
     risk_level: 'Low',
     status: 'Hit Target',
     holding_period: 'Swing',
+    strategy: 'Aggressive',
     source_news: [mockNews[0], mockNews[1]],
   },
 ];
