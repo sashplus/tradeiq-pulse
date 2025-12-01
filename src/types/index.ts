@@ -49,6 +49,7 @@ export interface Signal {
   total_score: number;
   fundamental_score: number;
   technical_score: number;
+  onchain_score: number;
   rating: SignalRating;
   entry_price: number;
   target_price: number;

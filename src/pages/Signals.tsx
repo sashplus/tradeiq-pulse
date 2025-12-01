@@ -81,6 +81,10 @@ const Signals = () => {
                           <span className="text-muted-foreground">T:</span>
                           <span className="font-medium">{signal.technical_score}</span>
                         </div>
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="text-muted-foreground">O:</span>
+                          <span className="font-medium">{signal.onchain_score}</span>
+                        </div>
                       </div>
                     </td>
                     <td className="p-3 font-mono">${signal.entry_price.toLocaleString()}</td>
