@@ -1,4 +1,4 @@
-import { LayoutDashboard, TrendingUp, Newspaper, Database, Settings, Bell, User } from "lucide-react";
+import { LayoutDashboard, TrendingUp, Newspaper, Database, Settings, Bell, User, BarChart3 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -14,6 +14,7 @@ import {
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Performance", url: "/performance", icon: BarChart3 },
   { title: "Signals", url: "/signals", icon: TrendingUp },
   { title: "News Feed", url: "/news", icon: Newspaper },
   { title: "Data Sources", url: "/sources", icon: Database },
