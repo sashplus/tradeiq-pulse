@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignalBadge } from "@/components/signals/SignalBadge";
 import { StrategyBadge } from "@/components/signals/StrategyBadge";
+import { TradeTypeBadge } from "@/components/signals/TradeTypeBadge";
 import { ScoreBar } from "@/components/signals/ScoreBar";
 import { Badge } from "@/components/ui/badge";
 import { mockSignals } from "@/lib/mockData";
@@ -34,7 +35,7 @@ const Signals = () => {
                 <tr className="border-b bg-muted/50">
                   <th className="p-3 text-left font-medium">Created</th>
                   <th className="p-3 text-left font-medium">Asset</th>
-                  <th className="p-3 text-left font-medium">Timeframe</th>
+                  <th className="p-3 text-left font-medium">Trade Type</th>
                   <th className="p-3 text-left font-medium">Strategy</th>
                   <th className="p-3 text-left font-medium">Rating</th>
                   <th className="p-3 text-left font-medium">Total Score</th>
@@ -57,7 +58,7 @@ const Signals = () => {
                       <div className="text-xs text-muted-foreground">{signal.asset.name}</div>
                     </td>
                     <td className="p-3">
-                      <Badge variant="outline">{signal.timeframe}</Badge>
+                      <TradeTypeBadge holdingPeriod={signal.holding_period} />
                     </td>
                     <td className="p-3">
                       <StrategyBadge strategy={signal.strategy} />

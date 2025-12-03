@@ -3,6 +3,7 @@ import { KPICard } from "@/components/dashboard/KPICard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignalBadge } from "@/components/signals/SignalBadge";
 import { StrategyBadge } from "@/components/signals/StrategyBadge";
+import { TradeTypeBadge } from "@/components/signals/TradeTypeBadge";
 import { SentimentBadge } from "@/components/signals/SentimentBadge";
 import { ScoreBar } from "@/components/signals/ScoreBar";
 import { Badge } from "@/components/ui/badge";
@@ -68,7 +69,7 @@ const Dashboard = () => {
                     <SignalBadge rating={signal.rating} />
                     <StrategyBadge strategy={signal.strategy} />
                   </div>
-                  <Badge variant="outline">{signal.holding_period}</Badge>
+                  <TradeTypeBadge holdingPeriod={signal.holding_period} />
                 </div>
                 <div className="flex items-center gap-4 text-sm">
                   <div>
@@ -158,7 +159,7 @@ const Dashboard = () => {
                 <tr className="border-b bg-muted/50">
                   <th className="p-3 text-left font-medium">Time</th>
                   <th className="p-3 text-left font-medium">Asset</th>
-                  <th className="p-3 text-left font-medium">Timeframe</th>
+                  <th className="p-3 text-left font-medium">Trade Type</th>
                   <th className="p-3 text-left font-medium">Strategy</th>
                   <th className="p-3 text-left font-medium">Rating</th>
                   <th className="p-3 text-left font-medium">Scores</th>
@@ -175,7 +176,7 @@ const Dashboard = () => {
                     </td>
                     <td className="p-3 font-medium">{signal.asset.symbol}</td>
                     <td className="p-3">
-                      <Badge variant="outline">{signal.timeframe}</Badge>
+                      <TradeTypeBadge holdingPeriod={signal.holding_period} />
                     </td>
                     <td className="p-3">
                       <StrategyBadge strategy={signal.strategy} />
