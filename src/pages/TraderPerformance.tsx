@@ -3,10 +3,12 @@ import { DateRange } from "react-day-picker";
 import { PerformanceFilters } from "@/components/performance/PerformanceFilters";
 import { PerformanceKPIs } from "@/components/performance/PerformanceKPIs";
 import { PerformanceCharts } from "@/components/performance/PerformanceCharts";
+import { OrdersTable } from "@/components/performance/OrdersTable";
 import { TradesTable } from "@/components/performance/TradesTable";
 import { AIInsights } from "@/components/performance/AIInsights";
 import {
   mockTrades,
+  mockOrders,
   mockPerformanceMetrics,
   mockEquityCurve,
   mockWeeklyProfit,
@@ -82,6 +84,9 @@ const TraderPerformance = () => {
         profitByStrategy={mockProfitByStrategy}
         profitByAsset={mockProfitByAsset}
       />
+
+      {/* Orders Table */}
+      <OrdersTable orders={mockOrders} />
 
       {/* Trades Table */}
       <TradesTable trades={filteredTrades} />

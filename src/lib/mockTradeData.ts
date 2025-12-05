@@ -4,6 +4,22 @@ import { mockAssets } from './mockData';
 export type TradeResult = 'Win' | 'Loss' | 'Break-even';
 export type TradeStatus = 'Closed' | 'Active';
 
+// Order types
+export type OrderType = 'Market' | 'Limit' | 'Stop' | 'Stop-Limit';
+export type OrderSide = 'Buy' | 'Sell';
+export type OrderStatus = 'Filled' | 'Partial' | 'Pending' | 'Canceled';
+
+export interface Order {
+  id: string;
+  asset: Asset;
+  orderType: OrderType;
+  side: OrderSide;
+  quantity: number;
+  price: number;
+  status: OrderStatus;
+  timestamp: string;
+}
+
 export interface Trade {
   id: string;
   timestamp: string;
@@ -302,3 +318,32 @@ export const mockAIInsights = {
     { asset: 'AAPL', pnl: -150, date: '8 days ago', strategy: 'Moderate' },
   ],
 };
+
+// Mock Orders data
+export const mockOrders: Order[] = [
+  { id: 'ORD-001', asset: mockAssets[0], orderType: 'Market', side: 'Buy', quantity: 0.5, price: 68200, status: 'Filled', timestamp: new Date(Date.now() - 3600000).toISOString() },
+  { id: 'ORD-002', asset: mockAssets[0], orderType: 'Limit', side: 'Sell', quantity: 0.3, price: 71000, status: 'Pending', timestamp: new Date(Date.now() - 3600000 * 2).toISOString() },
+  { id: 'ORD-003', asset: mockAssets[1], orderType: 'Stop', side: 'Sell', quantity: 2.5, price: 3400, status: 'Pending', timestamp: new Date(Date.now() - 86400000).toISOString() },
+  { id: 'ORD-004', asset: mockAssets[2], orderType: 'Market', side: 'Buy', quantity: 100, price: 158, status: 'Filled', timestamp: new Date(Date.now() - 86400000 * 2).toISOString() },
+  { id: 'ORD-005', asset: mockAssets[3], orderType: 'Limit', side: 'Buy', quantity: 50, price: 175, status: 'Partial', timestamp: new Date(Date.now() - 86400000 * 2).toISOString() },
+  { id: 'ORD-006', asset: mockAssets[0], orderType: 'Stop-Limit', side: 'Sell', quantity: 0.2, price: 65000, status: 'Canceled', timestamp: new Date(Date.now() - 86400000 * 3).toISOString() },
+  { id: 'ORD-007', asset: mockAssets[1], orderType: 'Market', side: 'Buy', quantity: 5, price: 3550, status: 'Filled', timestamp: new Date(Date.now() - 86400000 * 3).toISOString() },
+  { id: 'ORD-008', asset: mockAssets[2], orderType: 'Limit', side: 'Sell', quantity: 80, price: 172, status: 'Pending', timestamp: new Date(Date.now() - 86400000 * 4).toISOString() },
+  { id: 'ORD-009', asset: mockAssets[3], orderType: 'Market', side: 'Sell', quantity: 30, price: 183.2, status: 'Filled', timestamp: new Date(Date.now() - 86400000 * 4).toISOString() },
+  { id: 'ORD-010', asset: mockAssets[0], orderType: 'Limit', side: 'Buy', quantity: 0.4, price: 64000, status: 'Filled', timestamp: new Date(Date.now() - 86400000 * 5).toISOString() },
+  { id: 'ORD-011', asset: mockAssets[1], orderType: 'Stop', side: 'Sell', quantity: 3, price: 3300, status: 'Canceled', timestamp: new Date(Date.now() - 86400000 * 5).toISOString() },
+  { id: 'ORD-012', asset: mockAssets[2], orderType: 'Market', side: 'Buy', quantity: 120, price: 145.5, status: 'Filled', timestamp: new Date(Date.now() - 86400000 * 6).toISOString() },
+  { id: 'ORD-013', asset: mockAssets[3], orderType: 'Limit', side: 'Buy', quantity: 40, price: 178.25, status: 'Filled', timestamp: new Date(Date.now() - 86400000 * 6).toISOString() },
+  { id: 'ORD-014', asset: mockAssets[0], orderType: 'Stop-Limit', side: 'Buy', quantity: 0.25, price: 62000, status: 'Filled', timestamp: new Date(Date.now() - 86400000 * 7).toISOString() },
+  { id: 'ORD-015', asset: mockAssets[1], orderType: 'Market', side: 'Sell', quantity: 4, price: 3480, status: 'Filled', timestamp: new Date(Date.now() - 86400000 * 7).toISOString() },
+  { id: 'ORD-016', asset: mockAssets[2], orderType: 'Limit', side: 'Sell', quantity: 90, price: 164.2, status: 'Filled', timestamp: new Date(Date.now() - 86400000 * 8).toISOString() },
+  { id: 'ORD-017', asset: mockAssets[3], orderType: 'Stop', side: 'Sell', quantity: 25, price: 180, status: 'Filled', timestamp: new Date(Date.now() - 86400000 * 8).toISOString() },
+  { id: 'ORD-018', asset: mockAssets[0], orderType: 'Market', side: 'Buy', quantity: 0.6, price: 65200, status: 'Filled', timestamp: new Date(Date.now() - 86400000 * 9).toISOString() },
+  { id: 'ORD-019', asset: mockAssets[1], orderType: 'Limit', side: 'Buy', quantity: 6, price: 3420, status: 'Partial', timestamp: new Date(Date.now() - 86400000 * 9).toISOString() },
+  { id: 'ORD-020', asset: mockAssets[2], orderType: 'Market', side: 'Sell', quantity: 110, price: 168.5, status: 'Filled', timestamp: new Date(Date.now() - 86400000 * 10).toISOString() },
+  { id: 'ORD-021', asset: mockAssets[0], orderType: 'Limit', side: 'Buy', quantity: 0.35, price: 67500, status: 'Filled', timestamp: new Date(Date.now() - 86400000 * 10).toISOString() },
+  { id: 'ORD-022', asset: mockAssets[3], orderType: 'Stop-Limit', side: 'Sell', quantity: 35, price: 182, status: 'Pending', timestamp: new Date(Date.now() - 86400000 * 11).toISOString() },
+  { id: 'ORD-023', asset: mockAssets[1], orderType: 'Market', side: 'Buy', quantity: 7, price: 3600, status: 'Filled', timestamp: new Date(Date.now() - 86400000 * 11).toISOString() },
+  { id: 'ORD-024', asset: mockAssets[2], orderType: 'Limit', side: 'Buy', quantity: 85, price: 152, status: 'Filled', timestamp: new Date(Date.now() - 86400000 * 12).toISOString() },
+  { id: 'ORD-025', asset: mockAssets[0], orderType: 'Stop', side: 'Sell', quantity: 0.45, price: 66000, status: 'Canceled', timestamp: new Date(Date.now() - 86400000 * 12).toISOString() },
+];
