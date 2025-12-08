@@ -8,6 +8,8 @@ import { AuthGuard } from "./components/auth/AuthGuard";
 import { AppLayout } from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import TraderPerformance from "./pages/TraderPerformance";
+import MyOrders from "./pages/MyOrders";
+import MyTrades from "./pages/MyTrades";
 import Signals from "./pages/Signals";
 import News from "./pages/News";
 import DataSources from "./pages/DataSources";
@@ -48,6 +50,20 @@ const App = () => (
               <AuthGuard>
                 <AppLayout>
                   <TraderPerformance />
+                </AppLayout>
+              </AuthGuard>
+            } />
+            <Route path="/orders" element={
+              <AuthGuard>
+                <AppLayout>
+                  <MyOrders />
+                </AppLayout>
+              </AuthGuard>
+            } />
+            <Route path="/trades" element={
+              <AuthGuard>
+                <AppLayout>
+                  <MyTrades />
                 </AppLayout>
               </AuthGuard>
             } />
