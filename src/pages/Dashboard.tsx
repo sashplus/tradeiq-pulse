@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Activity, TrendingUp, FileText, CheckCircle2, BarChart3, AlertCircle } from "lucide-react";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,12 +10,22 @@ import { ScoreBar } from "@/components/signals/ScoreBar";
 import { Badge } from "@/components/ui/badge";
 import { mockSignals, mockNews } from "@/lib/mockData";
 import { formatDistanceToNow } from "date-fns";
+import { NewsDetailDrawer } from "@/components/news/NewsDetailDrawer";
+import { NewsItem } from "@/types";
 
 const Dashboard = () => {
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
   const activeSignals = mockSignals.filter(s => s.status === 'Active').length;
   const strongBuySignals = mockSignals.filter(s => s.rating === 'Strong Buy' || s.rating === 'Buy').length;
   const newsProcessed = mockNews.length;
   const avgFundamentalScore = Math.round(mockSignals.reduce((acc, s) => acc + s.fundamental_score, 0) / mockSignals.length);
+
+  const handleNewsClick = (news: NewsItem) => {
+    setSelectedNews(news);
+    setDrawerOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -119,7 +130,11 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {mockNews.slice(0, 4).map((news) => (
-              <div key={news.id} className="p-3 border border-border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer">
+              <div
+                key={news.id}
+                className="p-3 border border-border rounded-lg hover:bg-accent/50 hover:shadow-md transition-all cursor-pointer"
+                onClick={() => handleNewsClick(news)}
+              >
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="text-xs">{news.source}</Badge>
@@ -130,6 +145,7 @@ const Dashboard = () => {
                   </span>
                 </div>
                 <h4 className="font-medium text-sm leading-snug mb-2">{news.headline}</h4>
+                <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{news.content}</p>
                 <div className="flex items-center gap-2">
                   {news.assets.map((asset) => (
                     <Badge key={asset.id} variant="outline" className="text-xs">
@@ -212,6 +228,14 @@ const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* News Detail Drawer */}
+      <NewsDetailDrawer
+        news={selectedNews}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        variant="dashboard"
+      />
     </div>
   );
 };
