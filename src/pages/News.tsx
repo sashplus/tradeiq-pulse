@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SentimentBadge } from "@/components/signals/SentimentBadge";
 import { ScoreBar } from "@/components/signals/ScoreBar";
@@ -13,6 +14,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { NewsDetailDrawer } from "@/components/news/NewsDetailDrawer";
+import { NewsItem } from "@/types";
 
 const ALL_SOURCES = [
   "Bloomberg",
@@ -26,10 +29,13 @@ const ALL_SOURCES = [
 ];
 
 const News = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSources, setSelectedSources] = useState<string[]>(ALL_SOURCES);
   const [usedInSignalOnly, setUsedInSignalOnly] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleSourceToggle = (source: string) => {
     setSelectedSources((prev) =>
@@ -70,9 +76,55 @@ const News = () => {
     });
   }, [searchQuery, selectedSources, usedInSignalOnly]);
 
+  // Handle URL-based article opening
+  useEffect(() => {
+    const selectedId = searchParams.get("selectedId");
+    if (selectedId) {
+      const newsItem = mockNews.find((n) => n.id === selectedId);
+      if (newsItem) {
+        setSelectedNews(newsItem);
+        setDrawerOpen(true);
+      }
+    }
+  }, [searchParams]);
+
   const activeFilterCount =
     (selectedSources.length < ALL_SOURCES.length ? 1 : 0) +
     (usedInSignalOnly ? 1 : 0);
+
+  const handleNewsClick = (news: NewsItem) => {
+    setSelectedNews(news);
+    setDrawerOpen(true);
+    setSearchParams({ selectedId: news.id });
+  };
+
+  const handleDrawerClose = (open: boolean) => {
+    setDrawerOpen(open);
+    if (!open) {
+      setSearchParams({});
+    }
+  };
+
+  // Navigation within drawer
+  const currentIndex = selectedNews
+    ? filteredNews.findIndex((n) => n.id === selectedNews.id)
+    : -1;
+
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      const prevNews = filteredNews[currentIndex - 1];
+      setSelectedNews(prevNews);
+      setSearchParams({ selectedId: prevNews.id });
+    }
+  };
+
+  const handleNext = () => {
+    if (currentIndex < filteredNews.length - 1) {
+      const nextNews = filteredNews[currentIndex + 1];
+      setSelectedNews(nextNews);
+      setSearchParams({ selectedId: nextNews.id });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -225,14 +277,18 @@ const News = () => {
           </Card>
         ) : (
           filteredNews.map((news) => (
-            <Card key={news.id} className="hover:bg-accent/50 transition-colors cursor-pointer">
+            <Card
+              key={news.id}
+              className="hover:bg-accent/50 transition-all cursor-pointer hover:shadow-md"
+              onClick={() => handleNewsClick(news)}
+            >
               <CardHeader>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <CardTitle className="text-lg leading-tight mb-2">{news.headline}</CardTitle>
-                    <CardDescription className="line-clamp-2">{news.content}</CardDescription>
+                    <CardDescription className="line-clamp-3">{news.content}</CardDescription>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex-shrink-0">
                     <Badge variant="secondary" className="mb-2">{news.source}</Badge>
                     <div className="text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(news.timestamp), { addSuffix: true })}
@@ -282,6 +338,19 @@ const News = () => {
           ))
         )}
       </div>
+
+      {/* News Detail Drawer */}
+      <NewsDetailDrawer
+        news={selectedNews}
+        open={drawerOpen}
+        onOpenChange={handleDrawerClose}
+        showNavigation={true}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        hasPrevious={currentIndex > 0}
+        hasNext={currentIndex < filteredNews.length - 1}
+        variant="newsfeed"
+      />
     </div>
   );
 };

@@ -17,6 +17,8 @@ export interface NewsItem {
   source: string;
   headline: string;
   content: string;
+  full_text: string;
+  original_url?: string;
   assets: Asset[];
   sentiment_label: SentimentLabel;
   sentiment_score: number;
