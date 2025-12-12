@@ -5,7 +5,6 @@ import { SentimentBadge } from "@/components/signals/SentimentBadge";
 import { ScoreBar } from "@/components/signals/ScoreBar";
 import { Badge } from "@/components/ui/badge";
 import { mockNews } from "@/lib/mockData";
-import { formatDistanceToNow } from "date-fns";
 import { Filter, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +14,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { NewsDetailDrawer } from "@/components/news/NewsDetailDrawer";
+import { FeedModeToggle } from "@/components/news/FeedModeToggle";
+import { NewsTimeDisplay } from "@/components/news/NewsTimeDisplay";
+import { useFeedMode } from "@/hooks/useFeedMode";
 import { NewsItem } from "@/types";
 
 const ALL_SOURCES = [
@@ -36,6 +38,7 @@ const News = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { mode, setMode } = useFeedMode();
 
   const handleSourceToggle = (source: string) => {
     setSelectedSources((prev) =>
@@ -59,7 +62,7 @@ const News = () => {
   };
 
   const filteredNews = useMemo(() => {
-    return mockNews.filter((news) => {
+    const filtered = mockNews.filter((news) => {
       // Text search filter
       const matchesSearch =
         searchQuery === "" ||
@@ -74,7 +77,14 @@ const News = () => {
 
       return matchesSearch && matchesSource && matchesUsedInSignal;
     });
-  }, [searchQuery, selectedSources, usedInSignalOnly]);
+
+    // Sort based on feed mode
+    return filtered.sort((a, b) => {
+      const dateA = mode === "realtime" ? new Date(a.scraped_at) : new Date(a.published_at);
+      const dateB = mode === "realtime" ? new Date(b.scraped_at) : new Date(b.published_at);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [searchQuery, selectedSources, usedInSignalOnly, mode]);
 
   // Handle URL-based article opening
   useEffect(() => {
@@ -128,12 +138,13 @@ const News = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">News Feed</h1>
           <p className="text-muted-foreground">Real-time market news with fundamental analysis</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <FeedModeToggle mode={mode} onModeChange={setMode} />
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -288,11 +299,14 @@ const News = () => {
                     <CardTitle className="text-lg leading-tight mb-2">{news.headline}</CardTitle>
                     <CardDescription className="line-clamp-3">{news.content}</CardDescription>
                   </div>
-                  <div className="text-right flex-shrink-0">
+                  <div className="flex-shrink-0">
                     <Badge variant="secondary" className="mb-2">{news.source}</Badge>
-                    <div className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(news.timestamp), { addSuffix: true })}
-                    </div>
+                    <NewsTimeDisplay
+                      publishedAt={news.published_at}
+                      scrapedAt={news.scraped_at}
+                      mode={mode}
+                      className="text-right"
+                    />
                   </div>
                 </div>
               </CardHeader>
@@ -350,6 +364,7 @@ const News = () => {
         hasPrevious={currentIndex > 0}
         hasNext={currentIndex < filteredNews.length - 1}
         variant="newsfeed"
+        feedMode={mode}
       />
     </div>
   );

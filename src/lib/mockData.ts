@@ -13,6 +13,8 @@ export const mockNews: NewsItem[] = [
   {
     id: '1',
     timestamp: new Date(Date.now() - 3600000).toISOString(),
+    published_at: new Date(Date.now() - 4200000).toISOString(), // Published 70 min ago
+    scraped_at: new Date(Date.now() - 3600000).toISOString(), // Scraped 60 min ago
     source: 'Bloomberg',
     headline: 'Bitcoin ETF sees record inflows amid institutional adoption surge',
     content: 'Major cryptocurrency exchange-traded funds recorded unprecedented inflows this week as institutional investors continue to embrace digital assets...',
@@ -36,6 +38,8 @@ Market observers also point to the upcoming Bitcoin halving event as a potential
   {
     id: '2',
     timestamp: new Date(Date.now() - 7200000).toISOString(),
+    published_at: new Date(Date.now() - 7500000).toISOString(), // Published 2h 5min ago
+    scraped_at: new Date(Date.now() - 7200000).toISOString(), // Scraped 2h ago
     source: 'Reuters',
     headline: 'Federal Reserve hints at potential rate cuts in Q2',
     content: 'The Federal Reserve Chairman suggested in today\'s testimony that monetary policy adjustments may be warranted...',
@@ -61,6 +65,8 @@ Analysts at Goldman Sachs noted that a more accommodative Fed could accelerate c
   {
     id: '3',
     timestamp: new Date(Date.now() - 10800000).toISOString(),
+    published_at: new Date(Date.now() - 12600000).toISOString(), // Published 3.5h ago
+    scraped_at: new Date(Date.now() - 10800000).toISOString(), // Scraped 3h ago
     source: 'Coindesk',
     headline: 'Ethereum network upgrade faces unexpected delays',
     content: 'Core developers announced a postponement of the next major network upgrade due to critical testing issues...',
@@ -86,6 +92,8 @@ ETH prices reacted negatively to the news, dropping approximately 4% in the hour
   {
     id: '4',
     timestamp: new Date(Date.now() - 14400000).toISOString(),
+    published_at: new Date(Date.now() - 14400000).toISOString(), // Published 4h ago
+    scraped_at: new Date(Date.now() - 14100000).toISOString(), // Scraped 3h 55min ago (arrived later)
     source: 'The Block',
     headline: 'Solana DeFi TVL reaches all-time high',
     content: 'Total value locked in Solana decentralized finance protocols surged past previous records...',
@@ -111,6 +119,8 @@ Looking ahead, the launch of Firedancer, a new validator client developed by Jum
   {
     id: '5',
     timestamp: new Date(Date.now() - 18000000).toISOString(),
+    published_at: new Date(Date.now() - 21600000).toISOString(), // Published 6h ago
+    scraped_at: new Date(Date.now() - 18000000).toISOString(), // Scraped 5h ago
     source: 'CNBC',
     headline: 'Apple reports strong iPhone sales in emerging markets',
     content: 'Tech giant Apple exceeded analyst expectations with robust revenue growth...',

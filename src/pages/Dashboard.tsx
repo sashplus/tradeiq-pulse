@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Activity, TrendingUp, FileText, CheckCircle2, BarChart3, AlertCircle } from "lucide-react";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,16 +11,29 @@ import { Badge } from "@/components/ui/badge";
 import { mockSignals, mockNews } from "@/lib/mockData";
 import { formatDistanceToNow } from "date-fns";
 import { NewsDetailDrawer } from "@/components/news/NewsDetailDrawer";
+import { FeedModeToggle } from "@/components/news/FeedModeToggle";
+import { NewsTimeDisplay } from "@/components/news/NewsTimeDisplay";
+import { useFeedModeLocal } from "@/hooks/useFeedMode";
 import { NewsItem } from "@/types";
 
 const Dashboard = () => {
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { mode, setMode } = useFeedModeLocal();
 
   const activeSignals = mockSignals.filter(s => s.status === 'Active').length;
   const strongBuySignals = mockSignals.filter(s => s.rating === 'Strong Buy' || s.rating === 'Buy').length;
   const newsProcessed = mockNews.length;
   const avgFundamentalScore = Math.round(mockSignals.reduce((acc, s) => acc + s.fundamental_score, 0) / mockSignals.length);
+
+  // Sort news based on feed mode
+  const sortedNews = useMemo(() => {
+    return [...mockNews].sort((a, b) => {
+      const dateA = mode === "realtime" ? new Date(a.scraped_at) : new Date(a.published_at);
+      const dateB = mode === "realtime" ? new Date(b.scraped_at) : new Date(b.published_at);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [mode]);
 
   const handleNewsClick = (news: NewsItem) => {
     setSelectedNews(news);
@@ -122,14 +135,19 @@ const Dashboard = () => {
         {/* Recent News */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-primary" />
-              Recent News
-            </CardTitle>
-            <CardDescription>Latest market-moving news items</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-primary" />
+                  Recent News
+                </CardTitle>
+                <CardDescription>Latest market-moving news items</CardDescription>
+              </div>
+              <FeedModeToggle mode={mode} onModeChange={setMode} />
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {mockNews.slice(0, 4).map((news) => (
+            {sortedNews.slice(0, 4).map((news) => (
               <div
                 key={news.id}
                 className="p-3 border border-border rounded-lg hover:bg-accent/50 hover:shadow-md transition-all cursor-pointer"
@@ -140,9 +158,11 @@ const Dashboard = () => {
                     <Badge variant="secondary" className="text-xs">{news.source}</Badge>
                     <SentimentBadge sentiment={news.sentiment_label} />
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(news.timestamp), { addSuffix: true })}
-                  </span>
+                  <NewsTimeDisplay
+                    publishedAt={news.published_at}
+                    scrapedAt={news.scraped_at}
+                    mode={mode}
+                  />
                 </div>
                 <h4 className="font-medium text-sm leading-snug mb-2">{news.headline}</h4>
                 <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{news.content}</p>
@@ -235,6 +255,7 @@ const Dashboard = () => {
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         variant="dashboard"
+        feedMode={mode}
       />
     </div>
   );

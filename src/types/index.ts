@@ -14,6 +14,8 @@ export type NewsStatus = 'raw' | 'processed' | 'used_in_signal';
 export interface NewsItem {
   id: string;
   timestamp: string;
+  published_at: string;
+  scraped_at: string;
   source: string;
   headline: string;
   content: string;
