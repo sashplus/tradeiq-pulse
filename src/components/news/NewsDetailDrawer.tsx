@@ -6,9 +6,10 @@ import { SentimentBadge } from "@/components/signals/SentimentBadge";
 import { ScoreBar } from "@/components/signals/ScoreBar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NewsItem } from "@/types";
-import { formatDistanceToNow } from "date-fns";
 import { X, ExternalLink, ChevronLeft, ChevronRight, Newspaper } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { NewsTimeDisplay } from "@/components/news/NewsTimeDisplay";
+import type { FeedMode } from "@/hooks/useFeedMode";
 
 interface NewsDetailDrawerProps {
   news: NewsItem | null;
@@ -20,6 +21,7 @@ interface NewsDetailDrawerProps {
   hasPrevious?: boolean;
   hasNext?: boolean;
   variant?: "dashboard" | "newsfeed";
+  feedMode?: FeedMode;
 }
 
 export function NewsDetailDrawer({
@@ -32,6 +34,7 @@ export function NewsDetailDrawer({
   hasPrevious = false,
   hasNext = false,
   variant = "dashboard",
+  feedMode = "realtime",
 }: NewsDetailDrawerProps) {
   const navigate = useNavigate();
 
@@ -73,9 +76,11 @@ export function NewsDetailDrawer({
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="secondary">{news.source}</Badge>
               <SentimentBadge sentiment={news.sentiment_label} />
-              <span className="text-sm text-muted-foreground">
-                {formatDistanceToNow(new Date(news.timestamp), { addSuffix: true })}
-              </span>
+              <NewsTimeDisplay
+                publishedAt={news.published_at}
+                scrapedAt={news.scraped_at}
+                mode={feedMode}
+              />
             </div>
             <Button
               variant="ghost"
