@@ -6,9 +6,10 @@ import { cn } from "@/lib/utils";
 
 interface PerformanceKPIsProps {
   metrics: PerformanceMetrics;
+  periodLabel?: string;
 }
 
-export function PerformanceKPIs({ metrics }: PerformanceKPIsProps) {
+export function PerformanceKPIs({ metrics, periodLabel }: PerformanceKPIsProps) {
   return (
     <div className="space-y-4">
       {/* Main KPIs */}
@@ -17,6 +18,7 @@ export function PerformanceKPIs({ metrics }: PerformanceKPIsProps) {
           title="Total Profit (PnL)"
           value={`$${metrics.totalPnL.toLocaleString()}`}
           icon={DollarSign}
+          subtitle={periodLabel}
           trend={{
             value: `+${metrics.pnlChange}% vs last period`,
             positive: metrics.pnlChange > 0,
@@ -26,6 +28,7 @@ export function PerformanceKPIs({ metrics }: PerformanceKPIsProps) {
           title="Win Rate"
           value={`${metrics.winRate}%`}
           icon={Percent}
+          subtitle={periodLabel}
           trend={{
             value: "+5.2% vs last month",
             positive: true,
@@ -35,11 +38,13 @@ export function PerformanceKPIs({ metrics }: PerformanceKPIsProps) {
           title="Total Trades"
           value={metrics.totalTrades}
           icon={BarChart3}
+          subtitle={periodLabel}
         />
         <KPICard
           title="Avg Risk/Reward"
           value={`${metrics.avgRiskReward}:1`}
           icon={TrendingUp}
+          subtitle={periodLabel}
           trend={{
             value: "+0.3 improvement",
             positive: true,
@@ -49,6 +54,7 @@ export function PerformanceKPIs({ metrics }: PerformanceKPIsProps) {
           title="Risk-Adjusted Score"
           value={metrics.riskAdjustedScore.toFixed(2)}
           icon={Shield}
+          subtitle={periodLabel}
           trend={{
             value: "Sharpe-like metric",
             positive: true,
@@ -58,6 +64,7 @@ export function PerformanceKPIs({ metrics }: PerformanceKPIsProps) {
           title="Most Traded Asset"
           value={metrics.mostTradedAsset}
           icon={Coins}
+          subtitle={periodLabel}
         />
       </div>
 
