@@ -9,17 +9,23 @@ import { SentimentBadge } from "@/components/signals/SentimentBadge";
 import { ScoreBar } from "@/components/signals/ScoreBar";
 import { Badge } from "@/components/ui/badge";
 import { mockSignals, mockNews } from "@/lib/mockData";
+import { signalCouncilData, newsCouncilData, generateCouncilData } from "@/lib/mockCouncilData";
 import { formatDistanceToNow } from "date-fns";
 import { NewsDetailDrawer } from "@/components/news/NewsDetailDrawer";
 import { FeedModeToggle } from "@/components/news/FeedModeToggle";
 import { NewsTimeDisplay } from "@/components/news/NewsTimeDisplay";
 import { useFeedModeLocal } from "@/hooks/useFeedMode";
+import { CouncilIndicator } from "@/components/council/CouncilIndicator";
+import { NewsCouncilBlock } from "@/components/council/NewsCouncilBlock";
+import { SignalCouncilModal } from "@/components/council/SignalCouncilModal";
 import { NewsItem } from "@/types";
 
 const Dashboard = () => {
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { mode, setMode } = useFeedModeLocal();
+  const [councilModalOpen, setCouncilModalOpen] = useState(false);
+  const [selectedSignalId, setSelectedSignalId] = useState<string | null>(null);
 
   const activeSignals = mockSignals.filter(s => s.status === 'Active').length;
   const strongBuySignals = mockSignals.filter(s => s.rating === 'Strong Buy' || s.rating === 'Buy').length;
@@ -38,6 +44,11 @@ const Dashboard = () => {
   const handleNewsClick = (news: NewsItem) => {
     setSelectedNews(news);
     setDrawerOpen(true);
+  };
+
+  const handleSignalClick = (signalId: string) => {
+    setSelectedSignalId(signalId);
+    setCouncilModalOpen(true);
   };
 
   return (
@@ -85,50 +96,65 @@ const Dashboard = () => {
             <CardDescription>Highest-scoring signals from the last 24 hours</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {mockSignals.slice(0, 3).map((signal) => (
-              <div key={signal.id} className="p-4 border border-border rounded-lg space-y-2 hover:bg-accent/50 transition-colors cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="font-bold text-lg">{signal.asset.symbol}</div>
-                    <SignalBadge rating={signal.rating} />
-                    <StrategyBadge strategy={signal.strategy} />
+            {mockSignals.slice(0, 3).map((signal, idx) => {
+              const councilData = generateCouncilData(idx);
+              return (
+                <div key={signal.id} className="p-4 border border-border rounded-lg space-y-2 hover:bg-accent/50 transition-colors cursor-pointer">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="font-bold text-lg">{signal.asset.symbol}</div>
+                      <SignalBadge rating={signal.rating} />
+                      <StrategyBadge strategy={signal.strategy} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CouncilIndicator
+                        verdict={councilData.verdict}
+                        agreement={councilData.agreement}
+                        modelCount={councilData.modelCount}
+                        compact
+                      />
+                      <TradeTypeBadge holdingPeriod={signal.holding_period} />
+                    </div>
                   </div>
-                  <TradeTypeBadge holdingPeriod={signal.holding_period} />
+                  <div className="flex items-center gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">F:</span>
+                      <span className="font-medium ml-1">{signal.fundamental_score}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">T:</span>
+                      <span className="font-medium ml-1">{signal.technical_score}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">O:</span>
+                      <span className="font-medium ml-1">{signal.onchain_score}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Total:</span>
+                      <span className="font-medium ml-1">{signal.total_score}</span>
+                    </div>
+                  </div>
+                  {/* Council consensus text */}
+                  <div className="text-xs text-muted-foreground">
+                    AI Council consensus • {councilData.agreement}% agreement
+                  </div>
+                  <div className="flex items-center justify-between text-sm pt-2 border-t border-border">
+                    <div>
+                      <span className="text-muted-foreground">Entry:</span>
+                      <span className="font-mono ml-1">${signal.entry_price.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Target:</span>
+                      <span className="font-mono ml-1 text-bullish">${signal.target_price.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">SL:</span>
+                      <span className="font-mono ml-1 text-bearish">${signal.stop_loss.toLocaleString()}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">F:</span>
-                    <span className="font-medium ml-1">{signal.fundamental_score}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">T:</span>
-                    <span className="font-medium ml-1">{signal.technical_score}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">O:</span>
-                    <span className="font-medium ml-1">{signal.onchain_score}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Total:</span>
-                    <span className="font-medium ml-1">{signal.total_score}</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between text-sm pt-2 border-t border-border">
-                  <div>
-                    <span className="text-muted-foreground">Entry:</span>
-                    <span className="font-mono ml-1">${signal.entry_price.toLocaleString()}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Target:</span>
-                    <span className="font-mono ml-1 text-bullish">${signal.target_price.toLocaleString()}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">SL:</span>
-                    <span className="font-mono ml-1 text-bearish">${signal.stop_loss.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
 
@@ -147,37 +173,46 @@ const Dashboard = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {sortedNews.slice(0, 4).map((news) => (
-              <div
-                key={news.id}
-                className="p-3 border border-border rounded-lg hover:bg-accent/50 hover:shadow-md transition-all cursor-pointer"
-                onClick={() => handleNewsClick(news)}
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">{news.source}</Badge>
-                    <SentimentBadge sentiment={news.sentiment_label} />
+            {sortedNews.slice(0, 4).map((news) => {
+              const councilData = newsCouncilData[news.id] || generateCouncilData(parseInt(news.id));
+              return (
+                <div
+                  key={news.id}
+                  className="p-3 border border-border rounded-lg hover:bg-accent/50 hover:shadow-md transition-all cursor-pointer"
+                  onClick={() => handleNewsClick(news)}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">{news.source}</Badge>
+                      <SentimentBadge sentiment={news.sentiment_label} />
+                    </div>
+                    <NewsTimeDisplay
+                      publishedAt={news.published_at}
+                      scrapedAt={news.scraped_at}
+                      mode={mode}
+                    />
                   </div>
-                  <NewsTimeDisplay
-                    publishedAt={news.published_at}
-                    scrapedAt={news.scraped_at}
-                    mode={mode}
-                  />
-                </div>
-                <h4 className="font-medium text-sm leading-snug mb-2">{news.headline}</h4>
-                <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{news.content}</p>
-                <div className="flex items-center gap-2">
-                  {news.assets.map((asset) => (
-                    <Badge key={asset.id} variant="outline" className="text-xs">
-                      {asset.symbol}
-                    </Badge>
-                  ))}
-                  <div className="ml-auto">
-                    <ScoreBar score={news.fundamental_score} showLabel={false} className="w-20" />
+                  <h4 className="font-medium text-sm leading-snug mb-2">{news.headline}</h4>
+                  <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{news.content}</p>
+                  
+                  {/* Council Verdict replacing fundamental score bar */}
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
+                    <div className="flex items-center gap-2">
+                      {news.assets.map((asset) => (
+                        <Badge key={asset.id} variant="outline" className="text-xs">
+                          {asset.symbol}
+                        </Badge>
+                      ))}
+                    </div>
+                    <CouncilIndicator
+                      verdict={councilData.verdict}
+                      agreement={councilData.agreement}
+                      modelCount={councilData.modelCount}
+                    />
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
       </div>
@@ -198,6 +233,7 @@ const Dashboard = () => {
                   <th className="p-3 text-left font-medium">Trade Type</th>
                   <th className="p-3 text-left font-medium">Strategy</th>
                   <th className="p-3 text-left font-medium">Rating</th>
+                  <th className="p-3 text-left font-medium">AI Council</th>
                   <th className="p-3 text-left font-medium">Scores</th>
                   <th className="p-3 text-left font-medium">Entry</th>
                   <th className="p-3 text-left font-medium">Target</th>
@@ -205,44 +241,59 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {mockSignals.map((signal) => (
-                  <tr key={signal.id} className="border-b hover:bg-accent/50 transition-colors cursor-pointer">
-                    <td className="p-3 text-muted-foreground">
-                      {formatDistanceToNow(new Date(signal.created_at), { addSuffix: true })}
-                    </td>
-                    <td className="p-3 font-medium">{signal.asset.symbol}</td>
-                    <td className="p-3">
-                      <TradeTypeBadge holdingPeriod={signal.holding_period} />
-                    </td>
-                    <td className="p-3">
-                      <StrategyBadge strategy={signal.strategy} />
-                    </td>
-                    <td className="p-3">
-                      <SignalBadge rating={signal.rating} />
-                    </td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-1 text-xs">
-                        <span className="text-muted-foreground">F:</span>
-                        <span>{signal.fundamental_score}</span>
-                        <span className="text-muted-foreground mx-1">/</span>
-                        <span className="text-muted-foreground">T:</span>
-                        <span>{signal.technical_score}</span>
-                        <span className="text-muted-foreground mx-1">/</span>
-                        <span className="text-muted-foreground">O:</span>
-                        <span>{signal.onchain_score}</span>
-                        <span className="text-muted-foreground mx-1">=</span>
-                        <span className="font-medium">{signal.total_score}</span>
-                      </div>
-                    </td>
-                    <td className="p-3 font-mono">${signal.entry_price.toLocaleString()}</td>
-                    <td className="p-3 font-mono text-bullish">${signal.target_price.toLocaleString()}</td>
-                    <td className="p-3">
-                      <Badge variant={signal.status === 'Active' ? 'default' : 'secondary'}>
-                        {signal.status}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
+                {mockSignals.map((signal) => {
+                  const councilData = signalCouncilData[signal.id] || generateCouncilData(parseInt(signal.id));
+                  return (
+                    <tr
+                      key={signal.id}
+                      className="border-b hover:bg-accent/50 transition-colors cursor-pointer"
+                      onClick={() => handleSignalClick(signal.id)}
+                    >
+                      <td className="p-3 text-muted-foreground">
+                        {formatDistanceToNow(new Date(signal.created_at), { addSuffix: true })}
+                      </td>
+                      <td className="p-3 font-medium">{signal.asset.symbol}</td>
+                      <td className="p-3">
+                        <TradeTypeBadge holdingPeriod={signal.holding_period} />
+                      </td>
+                      <td className="p-3">
+                        <StrategyBadge strategy={signal.strategy} />
+                      </td>
+                      <td className="p-3">
+                        <SignalBadge rating={signal.rating} />
+                      </td>
+                      <td className="p-3">
+                        <CouncilIndicator
+                          verdict={councilData.verdict}
+                          agreement={councilData.agreement}
+                          modelCount={councilData.modelCount}
+                          compact
+                        />
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="text-muted-foreground">F:</span>
+                          <span>{signal.fundamental_score}</span>
+                          <span className="text-muted-foreground mx-1">/</span>
+                          <span className="text-muted-foreground">T:</span>
+                          <span>{signal.technical_score}</span>
+                          <span className="text-muted-foreground mx-1">/</span>
+                          <span className="text-muted-foreground">O:</span>
+                          <span>{signal.onchain_score}</span>
+                          <span className="text-muted-foreground mx-1">=</span>
+                          <span className="font-medium">{signal.total_score}</span>
+                        </div>
+                      </td>
+                      <td className="p-3 font-mono">${signal.entry_price.toLocaleString()}</td>
+                      <td className="p-3 font-mono text-bullish">${signal.target_price.toLocaleString()}</td>
+                      <td className="p-3">
+                        <Badge variant={signal.status === 'Active' ? 'default' : 'secondary'}>
+                          {signal.status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -256,6 +307,14 @@ const Dashboard = () => {
         onOpenChange={setDrawerOpen}
         variant="dashboard"
         feedMode={mode}
+      />
+
+      {/* Signal Council Modal */}
+      <SignalCouncilModal
+        open={councilModalOpen}
+        onOpenChange={setCouncilModalOpen}
+        summary={selectedSignalId ? signalCouncilData[selectedSignalId] : null}
+        assetSymbol={selectedSignalId ? mockSignals.find(s => s.id === selectedSignalId)?.asset.symbol : undefined}
       />
     </div>
   );
