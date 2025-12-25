@@ -9,6 +9,8 @@ import { NewsItem } from "@/types";
 import { X, ExternalLink, ChevronLeft, ChevronRight, Newspaper } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { NewsTimeDisplay } from "@/components/news/NewsTimeDisplay";
+import { CouncilAnalysisPanel } from "@/components/council/CouncilAnalysisPanel";
+import { newsCouncilData, generateNewsCouncilAnalysis } from "@/lib/mockCouncilData";
 import type { FeedMode } from "@/hooks/useFeedMode";
 
 interface NewsDetailDrawerProps {
@@ -52,6 +54,8 @@ export function NewsDetailDrawer({
   }, [open, onOpenChange]);
 
   if (!news) return null;
+
+  const councilAnalysis = newsCouncilData[news.id] || generateNewsCouncilAnalysis(news.id);
 
   const handleOpenOnNewsFeed = () => {
     onOpenChange(false);
@@ -100,60 +104,66 @@ export function NewsDetailDrawer({
           </SheetDescription>
         </SheetHeader>
 
-        {/* Meta Section */}
-        <div className="px-6 py-4 border-b border-border flex-shrink-0 space-y-4">
-          {/* Asset tags and status */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {news.assets.map((asset) => (
-              <Badge key={asset.id} variant="outline">
-                {asset.symbol}
-              </Badge>
-            ))}
-            <Badge
-              variant="outline"
-              className={
-                news.status === "used_in_signal"
-                  ? "border-primary/30 text-primary"
-                  : news.status === "processed"
-                  ? "border-bullish/30 text-bullish"
-                  : "border-muted-foreground/30 text-muted-foreground"
-              }
-            >
-              {news.status.replace("_", " ")}
-            </Badge>
-          </div>
-
-          {/* Metrics */}
-          <div className="flex items-center gap-6 flex-wrap">
-            <div className="text-sm">
-              <span className="text-muted-foreground">Sentiment:</span>
-              <span className="font-medium ml-2">
-                {Math.round(news.sentiment_score * 100)}
-              </span>
-            </div>
-            <div className="text-sm">
-              <span className="text-muted-foreground">Relevance:</span>
-              <span className="font-medium ml-2">{news.relevance_score}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Fundamental:</span>
-              <div className="w-24">
-                <ScoreBar score={news.fundamental_score} showLabel={false} />
-              </div>
-              <span className="text-sm font-medium">{news.fundamental_score}</span>
-            </div>
-          </div>
-        </div>
-
         {/* Body - Scrollable */}
         <ScrollArea className="flex-1 px-6">
-          <div className="py-6">
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              {news.full_text.split("\n\n").map((paragraph, index) => (
-                <p key={index} className="text-foreground leading-relaxed mb-4">
-                  {paragraph}
-                </p>
-              ))}
+          <div className="py-6 space-y-6">
+            {/* AI Council Verdict Panel - At the TOP */}
+            <CouncilAnalysisPanel analysis={councilAnalysis} />
+
+            {/* Meta Section */}
+            <div className="space-y-4">
+              {/* Asset tags and status */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {news.assets.map((asset) => (
+                  <Badge key={asset.id} variant="outline">
+                    {asset.symbol}
+                  </Badge>
+                ))}
+                <Badge
+                  variant="outline"
+                  className={
+                    news.status === "used_in_signal"
+                      ? "border-primary/30 text-primary"
+                      : news.status === "processed"
+                      ? "border-bullish/30 text-bullish"
+                      : "border-muted-foreground/30 text-muted-foreground"
+                  }
+                >
+                  {news.status.replace("_", " ")}
+                </Badge>
+              </div>
+
+              {/* Metrics */}
+              <div className="flex items-center gap-6 flex-wrap">
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Sentiment:</span>
+                  <span className="font-medium ml-2">
+                    {Math.round(news.sentiment_score * 100)}
+                  </span>
+                </div>
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Relevance:</span>
+                  <span className="font-medium ml-2">{news.relevance_score}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Fundamental:</span>
+                  <div className="w-24">
+                    <ScoreBar score={news.fundamental_score} showLabel={false} />
+                  </div>
+                  <span className="text-sm font-medium">{news.fundamental_score}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Full Article Text */}
+            <div className="pt-4 border-t border-border">
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                {news.full_text.split("\n\n").map((paragraph, index) => (
+                  <p key={index} className="text-foreground leading-relaxed mb-4">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
             </div>
           </div>
         </ScrollArea>

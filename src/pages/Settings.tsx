@@ -1,10 +1,18 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { mockSettings } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
-import { Save } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Save, ChevronDown, Scale } from "lucide-react";
 
 const Settings = () => {
+  const [councilSettingsOpen, setCouncilSettingsOpen] = useState(false);
+  const [minAgreement, setMinAgreement] = useState(70);
+  const [showDisagreements, setShowDisagreements] = useState(false);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -112,6 +120,67 @@ const Settings = () => {
             </p>
           </CardContent>
         </Card>
+
+        {/* AI Council Preferences (Collapsible) */}
+        <Collapsible open={councilSettingsOpen} onOpenChange={setCouncilSettingsOpen}>
+          <Card>
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Scale className="h-5 w-5 text-primary" />
+                    <CardTitle>AI Council Preferences (Advanced)</CardTitle>
+                  </div>
+                  <ChevronDown className={`h-5 w-5 transition-transform ${councilSettingsOpen ? 'rotate-180' : ''}`} />
+                </div>
+                <CardDescription>Configure multi-model AI Council behavior</CardDescription>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="space-y-6 pt-0">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Minimum Agreement % to Generate Signal</label>
+                    <span className="text-sm font-bold">{minAgreement}%</span>
+                  </div>
+                  <Slider 
+                    value={[minAgreement]} 
+                    onValueChange={(v) => setMinAgreement(v[0])}
+                    min={50}
+                    max={95}
+                    step={5}
+                    className="cursor-pointer"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Signals will only be generated when model agreement exceeds this threshold
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="show-disagreements" className="text-sm font-medium">
+                      Show Model Disagreements
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Display when models have conflicting opinions
+                    </p>
+                  </div>
+                  <Switch 
+                    id="show-disagreements"
+                    checked={showDisagreements}
+                    onCheckedChange={setShowDisagreements}
+                  />
+                </div>
+
+                <div className="pt-2 border-t border-border">
+                  <Button variant="outline" className="w-full">
+                    Re-run Analysis on New Data
+                  </Button>
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       </div>
     </div>
   );

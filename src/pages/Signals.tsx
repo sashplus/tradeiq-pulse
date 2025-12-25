@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignalBadge } from "@/components/signals/SignalBadge";
 import { StrategyBadge } from "@/components/signals/StrategyBadge";
@@ -5,11 +6,22 @@ import { TradeTypeBadge } from "@/components/signals/TradeTypeBadge";
 import { ScoreBar } from "@/components/signals/ScoreBar";
 import { Badge } from "@/components/ui/badge";
 import { mockSignals } from "@/lib/mockData";
+import { signalCouncilData, generateCouncilData } from "@/lib/mockCouncilData";
 import { formatDistanceToNow } from "date-fns";
 import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CouncilIndicator } from "@/components/council/CouncilIndicator";
+import { SignalCouncilModal } from "@/components/council/SignalCouncilModal";
 
 const Signals = () => {
+  const [councilModalOpen, setCouncilModalOpen] = useState(false);
+  const [selectedSignalId, setSelectedSignalId] = useState<string | null>(null);
+
+  const handleSignalClick = (signalId: string) => {
+    setSelectedSignalId(signalId);
+    setCouncilModalOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -26,7 +38,7 @@ const Signals = () => {
       <Card>
         <CardHeader>
           <CardTitle>All Signals</CardTitle>
-          <CardDescription>Click on any signal to view detailed analysis</CardDescription>
+          <CardDescription>Click on any signal to view AI Council analysis</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
@@ -38,83 +50,75 @@ const Signals = () => {
                   <th className="p-3 text-left font-medium">Trade Type</th>
                   <th className="p-3 text-left font-medium">Strategy</th>
                   <th className="p-3 text-left font-medium">Rating</th>
+                  <th className="p-3 text-left font-medium">AI Council</th>
                   <th className="p-3 text-left font-medium">Total Score</th>
-                  <th className="p-3 text-left font-medium">F / T</th>
                   <th className="p-3 text-left font-medium">Entry</th>
                   <th className="p-3 text-left font-medium">Target</th>
                   <th className="p-3 text-left font-medium">Stop Loss</th>
-                  <th className="p-3 text-left font-medium">Risk</th>
                   <th className="p-3 text-left font-medium">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {mockSignals.map((signal) => (
-                  <tr key={signal.id} className="border-b hover:bg-accent/50 transition-colors cursor-pointer">
-                    <td className="p-3 text-muted-foreground">
-                      {formatDistanceToNow(new Date(signal.created_at), { addSuffix: true })}
-                    </td>
-                    <td className="p-3">
-                      <div className="font-medium">{signal.asset.symbol}</div>
-                      <div className="text-xs text-muted-foreground">{signal.asset.name}</div>
-                    </td>
-                    <td className="p-3">
-                      <TradeTypeBadge holdingPeriod={signal.holding_period} />
-                    </td>
-                    <td className="p-3">
-                      <StrategyBadge strategy={signal.strategy} />
-                    </td>
-                    <td className="p-3">
-                      <SignalBadge rating={signal.rating} />
-                    </td>
-                    <td className="p-3">
-                      <div className="space-y-1">
-                        <div className="font-bold">{signal.total_score}</div>
-                        <ScoreBar score={signal.total_score} showLabel={false} />
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-1 text-xs">
-                          <span className="text-muted-foreground">F:</span>
-                          <span className="font-medium">{signal.fundamental_score}</span>
+                {mockSignals.map((signal) => {
+                  const councilData = signalCouncilData[signal.id] || generateCouncilData(parseInt(signal.id));
+                  return (
+                    <tr
+                      key={signal.id}
+                      className="border-b hover:bg-accent/50 transition-colors cursor-pointer"
+                      onClick={() => handleSignalClick(signal.id)}
+                    >
+                      <td className="p-3 text-muted-foreground">
+                        {formatDistanceToNow(new Date(signal.created_at), { addSuffix: true })}
+                      </td>
+                      <td className="p-3">
+                        <div className="font-medium">{signal.asset.symbol}</div>
+                        <div className="text-xs text-muted-foreground">{signal.asset.name}</div>
+                      </td>
+                      <td className="p-3">
+                        <TradeTypeBadge holdingPeriod={signal.holding_period} />
+                      </td>
+                      <td className="p-3">
+                        <StrategyBadge strategy={signal.strategy} />
+                      </td>
+                      <td className="p-3">
+                        <SignalBadge rating={signal.rating} />
+                      </td>
+                      <td className="p-3">
+                        <CouncilIndicator
+                          verdict={councilData.verdict}
+                          agreement={councilData.agreement}
+                          modelCount={councilData.modelCount}
+                        />
+                      </td>
+                      <td className="p-3">
+                        <div className="space-y-1">
+                          <div className="font-bold">{signal.total_score}</div>
+                          <ScoreBar score={signal.total_score} showLabel={false} />
                         </div>
-                        <div className="flex items-center gap-1 text-xs">
-                          <span className="text-muted-foreground">T:</span>
-                          <span className="font-medium">{signal.technical_score}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-xs">
-                          <span className="text-muted-foreground">O:</span>
-                          <span className="font-medium">{signal.onchain_score}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-3 font-mono">${signal.entry_price.toLocaleString()}</td>
-                    <td className="p-3 font-mono text-bullish">${signal.target_price.toLocaleString()}</td>
-                    <td className="p-3 font-mono text-bearish">${signal.stop_loss.toLocaleString()}</td>
-                    <td className="p-3">
-                      <Badge 
-                        variant="outline"
-                        className={
-                          signal.risk_level === 'Low' ? 'border-bullish/30 text-bullish' :
-                          signal.risk_level === 'High' ? 'border-bearish/30 text-bearish' :
-                          'border-neutral/30 text-neutral'
-                        }
-                      >
-                        {signal.risk_level}
-                      </Badge>
-                    </td>
-                    <td className="p-3">
-                      <Badge variant={signal.status === 'Active' ? 'default' : 'secondary'}>
-                        {signal.status}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="p-3 font-mono">${signal.entry_price.toLocaleString()}</td>
+                      <td className="p-3 font-mono text-bullish">${signal.target_price.toLocaleString()}</td>
+                      <td className="p-3 font-mono text-bearish">${signal.stop_loss.toLocaleString()}</td>
+                      <td className="p-3">
+                        <Badge variant={signal.status === 'Active' ? 'default' : 'secondary'}>
+                          {signal.status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </CardContent>
       </Card>
+
+      <SignalCouncilModal
+        open={councilModalOpen}
+        onOpenChange={setCouncilModalOpen}
+        summary={selectedSignalId ? signalCouncilData[selectedSignalId] : null}
+        assetSymbol={selectedSignalId ? mockSignals.find(s => s.id === selectedSignalId)?.asset.symbol : undefined}
+      />
     </div>
   );
 };
