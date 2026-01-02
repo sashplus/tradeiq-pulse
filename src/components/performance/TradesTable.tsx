@@ -9,6 +9,9 @@ import { Trade, TradeResult } from "@/lib/mockTradeData";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
+import { CouncilIndicator } from "@/components/council/CouncilIndicator";
+import { SignalCouncilModal } from "@/components/council/SignalCouncilModal";
+import { generateSignalCouncilSummary } from "@/lib/mockCouncilData";
 
 interface TradesTableProps {
   trades: Trade[];
@@ -37,6 +40,7 @@ export function TradesTable({ trades }: TradesTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortKey, setSortKey] = useState<SortKey>('timestamp');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [selectedTradeId, setSelectedTradeId] = useState<string | null>(null);
 
   const sortedTrades = useMemo(() => {
     return [...trades].sort((a, b) => {
@@ -111,6 +115,7 @@ export function TradesTable({ trades }: TradesTableProps) {
                 <th className="p-3 text-left font-medium">Result</th>
                 <SortHeader label="PnL" sortKeyName="pnl" />
                 <th className="p-3 text-left font-medium">Status</th>
+                <th className="p-3 text-left font-medium">AI Council</th>
               </tr>
             </thead>
             <tbody>
@@ -146,11 +151,32 @@ export function TradesTable({ trades }: TradesTableProps) {
                       {trade.status}
                     </Badge>
                   </td>
+                  <td className="p-3">
+                    <button 
+                      onClick={() => setSelectedTradeId(trade.id)}
+                      className="hover:opacity-80 transition-opacity"
+                    >
+                      <CouncilIndicator
+                        verdict={generateSignalCouncilSummary(trade.id).verdict}
+                        agreement={generateSignalCouncilSummary(trade.id).agreement}
+                        modelCount={generateSignalCouncilSummary(trade.id).modelCount}
+                        compact
+                      />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+
+        {/* Council Modal */}
+        <SignalCouncilModal
+          open={!!selectedTradeId}
+          onOpenChange={(open) => !open && setSelectedTradeId(null)}
+          summary={selectedTradeId ? generateSignalCouncilSummary(selectedTradeId) : null}
+          assetSymbol={paginatedTrades.find(t => t.id === selectedTradeId)?.asset.symbol}
+        />
 
         {/* Pagination */}
         <div className="flex items-center justify-between mt-4">

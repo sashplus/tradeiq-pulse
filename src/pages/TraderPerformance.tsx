@@ -1,9 +1,14 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { PerformanceKPIs } from "@/components/performance/PerformanceKPIs";
 import { PerformanceCharts } from "@/components/performance/PerformanceCharts";
 import { AIInsights } from "@/components/performance/AIInsights";
 import { TimeRangeSelector } from "@/components/performance/TimeRangeSelector";
 import { useTimeRange } from "@/hooks/useTimeRange";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CouncilAgreementBar } from "@/components/council/CouncilAgreementBar";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import {
   mockPerformanceMetrics,
   mockEquityCurve,
@@ -20,6 +25,7 @@ const TraderPerformance = () => {
   const { timeRange, setPreset, setCustomRange, getDateRange, getLabel } = useTimeRange('30d');
   const { start, end } = getDateRange();
   const periodLabel = getLabel();
+  const [showCouncilAttribution, setShowCouncilAttribution] = useState(false);
 
   // Filter trades based on time range
   const filteredTrades = useMemo(() => {
@@ -163,6 +169,71 @@ const TraderPerformance = () => {
 
       {/* AI Insights */}
       <AIInsights insights={mockAIInsights} />
+
+      {/* AI Council Attribution Toggle */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">AI Council Attribution</CardTitle>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="council-attribution" className="text-sm text-muted-foreground">
+                Show Attribution
+              </Label>
+              <Switch
+                id="council-attribution"
+                checked={showCouncilAttribution}
+                onCheckedChange={setShowCouncilAttribution}
+              />
+            </div>
+          </div>
+        </CardHeader>
+        {showCouncilAttribution && (
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Performance breakdown by AI Council agreement level
+            </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-lg border p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-bullish" />
+                  <span className="font-medium">High Agreement Signals (≥80%)</span>
+                </div>
+                <CouncilAgreementBar agreement={85} verdict="Bullish" />
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Win Rate</p>
+                    <p className="text-lg font-semibold text-bullish">72.4%</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Avg PnL</p>
+                    <p className="text-lg font-semibold text-bullish">+$1,245</p>
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-lg border p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <TrendingDown className="h-4 w-4 text-warning" />
+                  <span className="font-medium">Low Agreement Signals (&lt;80%)</span>
+                </div>
+                <CouncilAgreementBar agreement={62} verdict="Neutral" />
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Win Rate</p>
+                    <p className="text-lg font-semibold text-warning">54.2%</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Avg PnL</p>
+                    <p className="text-lg font-semibold text-warning">+$382</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Higher AI Council agreement correlates with better trade outcomes. Consider prioritizing signals with ≥80% model consensus.
+            </p>
+          </CardContent>
+        )}
+      </Card>
     </div>
   );
 };

@@ -7,6 +7,9 @@ import { Order, OrderStatus, OrderSide } from "@/lib/mockTradeData";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
+import { CouncilIndicator } from "@/components/council/CouncilIndicator";
+import { SignalCouncilModal } from "@/components/council/SignalCouncilModal";
+import { generateSignalCouncilSummary } from "@/lib/mockCouncilData";
 
 interface OrdersTableProps {
   orders: Order[];
@@ -60,6 +63,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [assetFilter, setAssetFilter] = useState<string>('all');
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   // Get unique assets for filter
   const uniqueAssets = useMemo(() => {
@@ -177,12 +181,13 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                 <SortHeader label="Price" sortKeyName="price" />
                 <th className="p-3 text-left font-medium">Status</th>
                 <SortHeader label="Timestamp" sortKeyName="timestamp" />
+                <th className="p-3 text-left font-medium">AI Council</th>
               </tr>
             </thead>
             <tbody>
               {paginatedOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                  <td colSpan={9} className="p-8 text-center text-muted-foreground">
                     No orders found
                   </td>
                 </tr>
@@ -207,12 +212,33 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                     <td className="p-3 text-muted-foreground">
                       {formatDistanceToNow(new Date(order.timestamp), { addSuffix: true })}
                     </td>
+                    <td className="p-3">
+                      <button 
+                        onClick={() => setSelectedOrderId(order.id)}
+                        className="hover:opacity-80 transition-opacity"
+                      >
+                        <CouncilIndicator
+                          verdict={generateSignalCouncilSummary(order.id).verdict}
+                          agreement={generateSignalCouncilSummary(order.id).agreement}
+                          modelCount={generateSignalCouncilSummary(order.id).modelCount}
+                          compact
+                        />
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
+
+        {/* Council Modal */}
+        <SignalCouncilModal
+          open={!!selectedOrderId}
+          onOpenChange={(open) => !open && setSelectedOrderId(null)}
+          summary={selectedOrderId ? generateSignalCouncilSummary(selectedOrderId) : null}
+          assetSymbol={paginatedOrders.find(o => o.id === selectedOrderId)?.asset.symbol}
+        />
 
         {/* Pagination */}
         {totalPages > 0 && (
