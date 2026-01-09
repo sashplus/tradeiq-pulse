@@ -4,11 +4,15 @@ import { SignalBadge } from "@/components/signals/SignalBadge";
 import { StrategyBadge } from "@/components/signals/StrategyBadge";
 import { TradeTypeBadge } from "@/components/signals/TradeTypeBadge";
 import { ScoreBar } from "@/components/signals/ScoreBar";
-import { Badge } from "@/components/ui/badge";
-import { mockSignals } from "@/lib/mockData";
+import { SignalStateBadge } from "@/components/signals/SignalStateBadge";
+import { SignalResultBadge } from "@/components/signals/SignalResultBadge";
+import { LastEventLabel } from "@/components/signals/LastEventLabel";
+import { SignalDetailsDrawer } from "@/components/signals/SignalDetailsDrawer";
+import { mockSignalsWithActions } from "@/lib/mockSignalActions";
 import { signalCouncilData, generateCouncilData } from "@/lib/mockCouncilData";
+import { getSignalState, getSignalResult, getLastEventLabel, SignalWithActions } from "@/types/signal";
 import { formatDistanceToNow } from "date-fns";
-import { Filter } from "lucide-react";
+import { Filter, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CouncilIndicator } from "@/components/council/CouncilIndicator";
 import { SignalCouncilModal } from "@/components/council/SignalCouncilModal";
@@ -16,10 +20,19 @@ import { SignalCouncilModal } from "@/components/council/SignalCouncilModal";
 const Signals = () => {
   const [councilModalOpen, setCouncilModalOpen] = useState(false);
   const [selectedSignalId, setSelectedSignalId] = useState<string | null>(null);
+  const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
+  const [selectedSignal, setSelectedSignal] = useState<SignalWithActions | null>(null);
 
-  const handleSignalClick = (signalId: string) => {
+  const handleCouncilClick = (e: React.MouseEvent, signalId: string) => {
+    e.stopPropagation();
     setSelectedSignalId(signalId);
     setCouncilModalOpen(true);
+  };
+
+  const handleDetailsClick = (e: React.MouseEvent, signal: SignalWithActions) => {
+    e.stopPropagation();
+    setSelectedSignal(signal);
+    setDetailsDrawerOpen(true);
   };
 
   return (
@@ -41,7 +54,7 @@ const Signals = () => {
           <CardDescription>Click on any signal to view AI Council analysis</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50">
@@ -55,17 +68,34 @@ const Signals = () => {
                   <th className="p-3 text-left font-medium">Entry</th>
                   <th className="p-3 text-left font-medium">Target</th>
                   <th className="p-3 text-left font-medium">Stop Loss</th>
-                  <th className="p-3 text-left font-medium">Status</th>
+                  <th className="p-3 text-left font-medium">State</th>
+                  <th className="p-3 text-left font-medium">Result</th>
+                  <th className="p-3 text-left font-medium">Details</th>
                 </tr>
               </thead>
               <tbody>
-                {mockSignals.map((signal) => {
+                {mockSignalsWithActions.map((signal) => {
                   const councilData = signalCouncilData[signal.id] || generateCouncilData(parseInt(signal.id));
+                  const state = getSignalState(signal.actions);
+                  const result = getSignalResult(signal.actions);
+                  const lastEvent = getLastEventLabel(signal.actions);
+                  const lastAction = signal.actions[signal.actions.length - 1];
+                  
+                  // Find the reason that caused the close for tooltip
+                  const closeReason = state === 'CLOSED' 
+                    ? signal.actions.find(a => 
+                        a.reason.includes('TP') || 
+                        a.reason.includes('SL') || 
+                        a.reason.includes('EVaR') ||
+                        a.reason === 'Flip Signal' ||
+                        a.reason === 'Invalidate Signal'
+                      )?.reason
+                    : undefined;
+
                   return (
                     <tr
                       key={signal.id}
-                      className="border-b hover:bg-accent/50 transition-colors cursor-pointer"
-                      onClick={() => handleSignalClick(signal.id)}
+                      className="border-b hover:bg-accent/50 transition-colors"
                     >
                       <td className="p-3 text-muted-foreground">
                         {formatDistanceToNow(new Date(signal.created_at), { addSuffix: true })}
@@ -75,20 +105,25 @@ const Signals = () => {
                         <div className="text-xs text-muted-foreground">{signal.asset.name}</div>
                       </td>
                       <td className="p-3">
-                        <TradeTypeBadge holdingPeriod={signal.holding_period} />
+                        <TradeTypeBadge holdingPeriod={signal.holding_period as any} />
                       </td>
                       <td className="p-3">
-                        <StrategyBadge strategy={signal.strategy} />
+                        <StrategyBadge strategy={signal.strategy as any} />
                       </td>
                       <td className="p-3">
-                        <SignalBadge rating={signal.rating} />
+                        <SignalBadge rating={signal.rating as any} />
                       </td>
                       <td className="p-3">
-                        <CouncilIndicator
-                          verdict={councilData.verdict}
-                          agreement={councilData.agreement}
-                          modelCount={councilData.modelCount}
-                        />
+                        <div 
+                          onClick={(e) => handleCouncilClick(e, signal.id)}
+                          className="cursor-pointer"
+                        >
+                          <CouncilIndicator
+                            verdict={councilData.verdict}
+                            agreement={councilData.agreement}
+                            modelCount={councilData.modelCount}
+                          />
+                        </div>
                       </td>
                       <td className="p-3">
                         <div className="space-y-1">
@@ -100,9 +135,31 @@ const Signals = () => {
                       <td className="p-3 font-mono text-bullish">${signal.target_price.toLocaleString()}</td>
                       <td className="p-3 font-mono text-bearish">${signal.stop_loss.toLocaleString()}</td>
                       <td className="p-3">
-                        <Badge variant={signal.status === 'Active' ? 'default' : 'secondary'}>
-                          {signal.status}
-                        </Badge>
+                        <div>
+                          <SignalStateBadge state={state} />
+                          {state === 'OPEN' && lastEvent && (
+                            <LastEventLabel 
+                              label={lastEvent} 
+                              fullReason={lastAction?.reason}
+                            />
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <SignalResultBadge 
+                          result={result} 
+                          fullReason={closeReason}
+                        />
+                      </td>
+                      <td className="p-3">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={(e) => handleDetailsClick(e, signal)}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
                       </td>
                     </tr>
                   );
@@ -117,7 +174,13 @@ const Signals = () => {
         open={councilModalOpen}
         onOpenChange={setCouncilModalOpen}
         summary={selectedSignalId ? signalCouncilData[selectedSignalId] : null}
-        assetSymbol={selectedSignalId ? mockSignals.find(s => s.id === selectedSignalId)?.asset.symbol : undefined}
+        assetSymbol={selectedSignalId ? mockSignalsWithActions.find(s => s.id === selectedSignalId)?.asset.symbol : undefined}
+      />
+
+      <SignalDetailsDrawer
+        open={detailsDrawerOpen}
+        onOpenChange={setDetailsDrawerOpen}
+        signal={selectedSignal}
       />
     </div>
   );
