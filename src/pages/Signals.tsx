@@ -21,7 +21,24 @@ const Signals = () => {
   const [councilModalOpen, setCouncilModalOpen] = useState(false);
   const [selectedSignalId, setSelectedSignalId] = useState<string | null>(null);
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
-  const [selectedSignal, setSelectedSignal] = useState<SignalWithActions | null>(null);
+  const [selectedSignalData, setSelectedSignalData] = useState<{
+    symbol: string;
+    actions: Array<{
+      sl: number;
+      qty: number;
+      tp1: number;
+      tp2: number;
+      tp3: number;
+      side: string | null;
+      price: number;
+      rating: string | null;
+      reason: string;
+      symbol: string;
+      trade_type: string | null;
+      action_type: string;
+      total_score: number;
+    }>;
+  } | null>(null);
 
   const handleCouncilClick = (e: React.MouseEvent, signalId: string) => {
     e.stopPropagation();
@@ -31,7 +48,26 @@ const Signals = () => {
 
   const handleDetailsClick = (e: React.MouseEvent, signal: SignalWithActions) => {
     e.stopPropagation();
-    setSelectedSignal(signal);
+    // Transform to the new drawer format
+    const drawerData = {
+      symbol: signal.asset.symbol,
+      actions: signal.actions.map(action => ({
+        sl: signal.stop_loss,
+        qty: action.size_change ? Math.abs(action.size_change) / 100 : 0,
+        tp1: signal.target_price,
+        tp2: signal.target_price_2 ?? 0,
+        tp3: signal.target_price_3 ?? 0,
+        side: null,
+        price: signal.entry_price,
+        rating: signal.rating,
+        reason: action.reason,
+        symbol: signal.asset.symbol,
+        trade_type: signal.holding_period,
+        action_type: action.action_type,
+        total_score: signal.total_score,
+      }))
+    };
+    setSelectedSignalData(drawerData);
     setDetailsDrawerOpen(true);
   };
 
@@ -180,7 +216,7 @@ const Signals = () => {
       <SignalDetailsDrawer
         open={detailsDrawerOpen}
         onOpenChange={setDetailsDrawerOpen}
-        signal={selectedSignal}
+        signal={selectedSignalData}
       />
     </div>
   );
