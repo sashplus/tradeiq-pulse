@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignalBadge } from "@/components/signals/SignalBadge";
 import { StrategyBadge } from "@/components/signals/StrategyBadge";
@@ -8,6 +8,7 @@ import { SignalStateBadge } from "@/components/signals/SignalStateBadge";
 import { SignalResultBadge } from "@/components/signals/SignalResultBadge";
 import { LastEventLabel } from "@/components/signals/LastEventLabel";
 import { SignalDetailsDrawer } from "@/components/signals/SignalDetailsDrawer";
+import { TradeTypeFilter, TradeTypeValue, normalizeTradeType } from "@/components/signals/TradeTypeFilter";
 import { mockSignalsWithActions } from "@/lib/mockSignalActions";
 import { signalCouncilData, generateCouncilData } from "@/lib/mockCouncilData";
 import { getSignalState, getSignalResult, getLastEventLabel, SignalWithActions } from "@/types/signal";
@@ -18,6 +19,7 @@ import { CouncilIndicator } from "@/components/council/CouncilIndicator";
 import { SignalCouncilModal } from "@/components/council/SignalCouncilModal";
 
 const Signals = () => {
+  const [selectedTradeTypes, setSelectedTradeTypes] = useState<Set<TradeTypeValue>>(new Set());
   const [councilModalOpen, setCouncilModalOpen] = useState(false);
   const [selectedSignalId, setSelectedSignalId] = useState<string | null>(null);
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
@@ -71,6 +73,18 @@ const Signals = () => {
     setDetailsDrawerOpen(true);
   };
 
+  // Filter signals by trade type
+  const filteredSignals = useMemo(() => {
+    // If none selected or all selected, show all
+    if (selectedTradeTypes.size === 0 || selectedTradeTypes.size === 3) {
+      return mockSignalsWithActions;
+    }
+    return mockSignalsWithActions.filter((signal) => {
+      const normalized = normalizeTradeType(signal.holding_period);
+      return normalized && selectedTradeTypes.has(normalized);
+    });
+  }, [selectedTradeTypes]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -96,7 +110,12 @@ const Signals = () => {
                 <tr className="border-b bg-muted/50">
                   <th className="p-3 text-left font-medium">Created</th>
                   <th className="p-3 text-left font-medium">Asset</th>
-                  <th className="p-3 text-left font-medium">Trade Type</th>
+                  <th className="p-3 text-left font-medium">
+                    <TradeTypeFilter
+                      selectedTypes={selectedTradeTypes}
+                      onSelectionChange={setSelectedTradeTypes}
+                    />
+                  </th>
                   <th className="p-3 text-left font-medium">Strategy</th>
                   <th className="p-3 text-left font-medium">Rating</th>
                   <th className="p-3 text-left font-medium">AI Council</th>
@@ -110,7 +129,14 @@ const Signals = () => {
                 </tr>
               </thead>
               <tbody>
-                {mockSignalsWithActions.map((signal) => {
+                {filteredSignals.length === 0 ? (
+                  <tr>
+                    <td colSpan={13} className="p-8 text-center text-muted-foreground">
+                      No signals match the selected trade types
+                    </td>
+                  </tr>
+                ) : (
+                  filteredSignals.map((signal) => {
                   const councilData = signalCouncilData[signal.id] || generateCouncilData(parseInt(signal.id));
                   const state = getSignalState(signal.actions);
                   const result = getSignalResult(signal.actions);
@@ -199,7 +225,9 @@ const Signals = () => {
                       </td>
                     </tr>
                   );
-                })}
+                  })
+                )}
+              
               </tbody>
             </table>
           </div>
