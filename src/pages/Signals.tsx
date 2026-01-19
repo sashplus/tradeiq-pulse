@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignalBadge } from "@/components/signals/SignalBadge";
 import { StrategyBadge } from "@/components/signals/StrategyBadge";
@@ -9,6 +9,7 @@ import { SignalResultBadge } from "@/components/signals/SignalResultBadge";
 import { LastEventLabel } from "@/components/signals/LastEventLabel";
 import { SignalDetailsDrawer } from "@/components/signals/SignalDetailsDrawer";
 import { TradeTypeFilter, TradeTypeValue, normalizeTradeType } from "@/components/signals/TradeTypeFilter";
+import { SignalsPagination, useSignalsPagination, paginateArray } from "@/components/signals/SignalsPagination";
 import { mockSignalsWithActions } from "@/lib/mockSignalActions";
 import { signalCouncilData, generateCouncilData } from "@/lib/mockCouncilData";
 import { getSignalState, getSignalResult, getLastEventLabel, SignalWithActions } from "@/types/signal";
@@ -42,6 +43,8 @@ const Signals = () => {
     }>;
   } | null>(null);
 
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
   const handleCouncilClick = (e: React.MouseEvent, signalId: string) => {
     e.stopPropagation();
     setSelectedSignalId(signalId);
@@ -50,7 +53,6 @@ const Signals = () => {
 
   const handleDetailsClick = (e: React.MouseEvent, signal: SignalWithActions) => {
     e.stopPropagation();
-    // Transform to the new drawer format
     const drawerData = {
       symbol: signal.asset.symbol,
       actions: signal.actions.map(action => ({
@@ -75,7 +77,6 @@ const Signals = () => {
 
   // Filter signals by trade type
   const filteredSignals = useMemo(() => {
-    // If none selected or all selected, show all
     if (selectedTradeTypes.size === 0 || selectedTradeTypes.size === 3) {
       return mockSignalsWithActions;
     }
@@ -84,6 +85,25 @@ const Signals = () => {
       return normalized && selectedTradeTypes.has(normalized);
     });
   }, [selectedTradeTypes]);
+
+  // Pagination
+  const {
+    currentPage,
+    pageSize,
+    onPageChange,
+    onPageSizeChange,
+  } = useSignalsPagination(filteredSignals.length);
+
+  // Paginate filtered signals
+  const paginatedSignals = useMemo(() => {
+    return paginateArray(filteredSignals, currentPage, pageSize);
+  }, [filteredSignals, currentPage, pageSize]);
+
+  // Scroll to top of table on page change
+  const handlePageChange = (page: number) => {
+    onPageChange(page);
+    tableContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <div className="space-y-6">
@@ -103,10 +123,10 @@ const Signals = () => {
           <CardTitle>All Signals</CardTitle>
           <CardDescription>Click on any signal to view AI Council analysis</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border overflow-x-auto">
+        <CardContent className="p-0">
+          <div ref={tableContainerRef} className="rounded-md border mx-6 overflow-x-auto max-h-[600px] overflow-y-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="sticky top-0 bg-background z-10">
                 <tr className="border-b bg-muted/50">
                   <th className="p-3 text-left font-medium">Created</th>
                   <th className="p-3 text-left font-medium">Asset</th>
@@ -129,107 +149,116 @@ const Signals = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredSignals.length === 0 ? (
+                {paginatedSignals.length === 0 ? (
                   <tr>
                     <td colSpan={13} className="p-8 text-center text-muted-foreground">
                       No signals match the selected trade types
                     </td>
                   </tr>
                 ) : (
-                  filteredSignals.map((signal) => {
-                  const councilData = signalCouncilData[signal.id] || generateCouncilData(parseInt(signal.id));
-                  const state = getSignalState(signal.actions);
-                  const result = getSignalResult(signal.actions);
-                  const lastEvent = getLastEventLabel(signal.actions);
-                  const lastAction = signal.actions[signal.actions.length - 1];
-                  
-                  // Find the reason that caused the close for tooltip
-                  const closeReason = state === 'CLOSED' 
-                    ? signal.actions.find(a => 
-                        a.reason.includes('TP') || 
-                        a.reason.includes('SL') || 
-                        a.reason.includes('EVaR') ||
-                        a.reason === 'Flip Signal' ||
-                        a.reason === 'Invalidate Signal'
-                      )?.reason
-                    : undefined;
+                  paginatedSignals.map((signal) => {
+                    const councilData = signalCouncilData[signal.id] || generateCouncilData(parseInt(signal.id));
+                    const state = getSignalState(signal.actions);
+                    const result = getSignalResult(signal.actions);
+                    const lastEvent = getLastEventLabel(signal.actions);
+                    const lastAction = signal.actions[signal.actions.length - 1];
+                    
+                    const closeReason = state === 'CLOSED' 
+                      ? signal.actions.find(a => 
+                          a.reason.includes('TP') || 
+                          a.reason.includes('SL') || 
+                          a.reason.includes('EVaR') ||
+                          a.reason === 'Flip Signal' ||
+                          a.reason === 'Invalidate Signal'
+                        )?.reason
+                      : undefined;
 
-                  return (
-                    <tr
-                      key={signal.id}
-                      className="border-b hover:bg-accent/50 transition-colors"
-                    >
-                      <td className="p-3 text-muted-foreground">
-                        {formatDistanceToNow(new Date(signal.created_at), { addSuffix: true })}
-                      </td>
-                      <td className="p-3">
-                        <div className="font-medium">{signal.asset.symbol}</div>
-                        <div className="text-xs text-muted-foreground">{signal.asset.name}</div>
-                      </td>
-                      <td className="p-3">
-                        <TradeTypeBadge holdingPeriod={signal.holding_period as any} />
-                      </td>
-                      <td className="p-3">
-                        <StrategyBadge strategy={signal.strategy as any} />
-                      </td>
-                      <td className="p-3">
-                        <SignalBadge rating={signal.rating as any} />
-                      </td>
-                      <td className="p-3">
-                        <div 
-                          onClick={(e) => handleCouncilClick(e, signal.id)}
-                          className="cursor-pointer"
-                        >
-                          <CouncilIndicator
-                            verdict={councilData.verdict}
-                            agreement={councilData.agreement}
-                            modelCount={councilData.modelCount}
-                          />
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        <div className="space-y-1">
-                          <div className="font-bold">{signal.total_score}</div>
-                          <ScoreBar score={signal.total_score} showLabel={false} />
-                        </div>
-                      </td>
-                      <td className="p-3 font-mono">${signal.entry_price.toLocaleString()}</td>
-                      <td className="p-3 font-mono text-bullish">${signal.target_price.toLocaleString()}</td>
-                      <td className="p-3 font-mono text-bearish">${signal.stop_loss.toLocaleString()}</td>
-                      <td className="p-3">
-                        <div>
-                          <SignalStateBadge state={state} />
-                          {state === 'OPEN' && lastEvent && (
-                            <LastEventLabel 
-                              label={lastEvent} 
-                              fullReason={lastAction?.reason}
+                    return (
+                      <tr
+                        key={signal.id}
+                        className="border-b hover:bg-accent/50 transition-colors"
+                      >
+                        <td className="p-3 text-muted-foreground">
+                          {formatDistanceToNow(new Date(signal.created_at), { addSuffix: true })}
+                        </td>
+                        <td className="p-3">
+                          <div className="font-medium">{signal.asset.symbol}</div>
+                          <div className="text-xs text-muted-foreground">{signal.asset.name}</div>
+                        </td>
+                        <td className="p-3">
+                          <TradeTypeBadge holdingPeriod={signal.holding_period as any} />
+                        </td>
+                        <td className="p-3">
+                          <StrategyBadge strategy={signal.strategy as any} />
+                        </td>
+                        <td className="p-3">
+                          <SignalBadge rating={signal.rating as any} />
+                        </td>
+                        <td className="p-3">
+                          <div 
+                            onClick={(e) => handleCouncilClick(e, signal.id)}
+                            className="cursor-pointer"
+                          >
+                            <CouncilIndicator
+                              verdict={councilData.verdict}
+                              agreement={councilData.agreement}
+                              modelCount={councilData.modelCount}
                             />
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        <SignalResultBadge 
-                          result={result} 
-                          fullReason={closeReason}
-                        />
-                      </td>
-                      <td className="p-3">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0"
-                          onClick={(e) => handleDetailsClick(e, signal)}
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      </td>
-                    </tr>
-                  );
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <div className="space-y-1">
+                            <div className="font-bold">{signal.total_score}</div>
+                            <ScoreBar score={signal.total_score} showLabel={false} />
+                          </div>
+                        </td>
+                        <td className="p-3 font-mono">${signal.entry_price.toLocaleString()}</td>
+                        <td className="p-3 font-mono text-bullish">${signal.target_price.toLocaleString()}</td>
+                        <td className="p-3 font-mono text-bearish">${signal.stop_loss.toLocaleString()}</td>
+                        <td className="p-3">
+                          <div>
+                            <SignalStateBadge state={state} />
+                            {state === 'OPEN' && lastEvent && (
+                              <LastEventLabel 
+                                label={lastEvent} 
+                                fullReason={lastAction?.reason}
+                              />
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <SignalResultBadge 
+                            result={result} 
+                            fullReason={closeReason}
+                          />
+                        </td>
+                        <td className="p-3">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={(e) => handleDetailsClick(e, signal)}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    );
                   })
                 )}
-              
               </tbody>
             </table>
+          </div>
+
+          {/* Modern Pagination Footer */}
+          <div className="border-t mx-6">
+            <SignalsPagination
+              totalItems={filteredSignals.length}
+              currentPage={currentPage}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+              onPageSizeChange={onPageSizeChange}
+            />
           </div>
         </CardContent>
       </Card>
